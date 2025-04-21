@@ -1,0 +1,53 @@
+PS C:\Users\YASKHAND\Documents\leaveapp\leaveapp> dotnet build
+MSBuild version 17.8.19+c3ade832a for .NET
+  Determining projects to restore...
+C:\Users\YASKHAND\Documents\leaveapp\leaveapp\leaveapp.csproj : warning NU1608: Detected package version outside of dependency con
+straint: AutoMapper.Extensions.Microsoft.DependencyInjection 8.0.0 requires Microsoft.Extensions.DependencyInjection.Abstractions  
+(>= 3.0.0 && < 4.0.0) but version Microsoft.Extensions.DependencyInjection.Abstractions 8.0.0 was resolved.
+C:\Users\YASKHAND\Documents\leaveapp\leaveapp\leaveapp.csproj : warning NU1701: Package 'Microsoft.AspNet.WebApi.Client 5.2.3' was
+ restored using '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4. 
+7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1' instead of the project target framewo 
+rk 'net8.0'. This package may not be fully compatible with your project.
+C:\Users\YASKHAND\Documents\leaveapp\leaveapp\leaveapp.csproj : warning NU1701: Package 'Sendgrid 8.0.0' was restored using '.NETF
+ramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Ver 
+sion=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1' instead of the project target framework 'net8.0'. This pack 
+age may not be fully compatible with your project.
+C:\Users\YASKHAND\Documents\leaveapp\leaveapp\leaveapp.csproj : warning NU1701: Package 'SendGrid.CSharp.HTTP.Client 3.0.0' was re 
+stored using '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1 
+, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1' instead of the project target framework  
+'net8.0'. This package may not be fully compatible with your project.
+C:\Users\YASKHAND\Documents\leaveapp\leaveapp\leaveapp.csproj : error NU1107: Version conflict detected for Microsoft.Extensions.O
+ptions. Install/reference Microsoft.Extensions.Options 8.0.0 directly to project leaveapp to resolve this issue.
+C:\Users\YASKHAND\Documents\leaveapp\leaveapp\leaveapp.csproj : error NU1107:  leaveapp -> Microsoft.EntityFrameworkCore.Design 8. 
+0.0 -> Microsoft.EntityFrameworkCore.Relational 8.0.0 -> Microsoft.EntityFrameworkCore 8.0.0 -> Microsoft.Extensions.Logging 8.0.0 
+ -> Microsoft.Extensions.Options (>= 8.0.0)
+C:\Users\YASKHAND\Documents\leaveapp\leaveapp\leaveapp.csproj : error NU1107:  leaveapp -> AutoMapper.Extensions.Microsoft.Depende 
+ncyInjection 8.0.0 -> Microsoft.Extensions.Options (>= 3.0.0 && < 4.0.0).
+  Failed to restore C:\Users\YASKHAND\Documents\leaveapp\leaveapp\leaveapp.csproj (in 1.67 sec).
+
+Build FAILED.
+
+C:\Users\YASKHAND\Documents\leaveapp\leaveapp\leaveapp.csproj : warning NU1608: Detected package version outside of dependency con 
+straint: AutoMapper.Extensions.Microsoft.DependencyInjection 8.0.0 requires Microsoft.Extensions.DependencyInjection.Abstractions  
+(>= 3.0.0 && < 4.0.0) but version Microsoft.Extensions.DependencyInjection.Abstractions 8.0.0 was resolved.
+C:\Users\YASKHAND\Documents\leaveapp\leaveapp\leaveapp.csproj : warning NU1701: Package 'Microsoft.AspNet.WebApi.Client 5.2.3' was 
+ restored using '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4. 
+7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1' instead of the project target framewo 
+rk 'net8.0'. This package may not be fully compatible with your project.
+C:\Users\YASKHAND\Documents\leaveapp\leaveapp\leaveapp.csproj : warning NU1701: Package 'Sendgrid 8.0.0' was restored using '.NETF 
+ramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Ver 
+sion=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1' instead of the project target framework 'net8.0'. This pack 
+age may not be fully compatible with your project.
+C:\Users\YASKHAND\Documents\leaveapp\leaveapp\leaveapp.csproj : warning NU1701: Package 'SendGrid.CSharp.HTTP.Client 3.0.0' was re 
+stored using '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1 
+, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1' instead of the project target framework  
+'net8.0'. This package may not be fully compatible with your project.
+C:\Users\YASKHAND\Documents\leaveapp\leaveapp\leaveapp.csproj : error NU1107: Version conflict detected for Microsoft.Extensions.O 
+ptions. Install/reference Microsoft.Extensions.Options 8.0.0 directly to project leaveapp to resolve this issue.
+C:\Users\YASKHAND\Documents\leaveapp\leaveapp\leaveapp.csproj : error NU1107:  leaveapp -> Microsoft.EntityFrameworkCore.Design 8. 
+0.0 -> Microsoft.EntityFrameworkCore.Relational 8.0.0 -> Microsoft.EntityFrameworkCore 8.0.0 -> Microsoft.Extensions.Logging 8.0.0 
+ -> Microsoft.Extensions.Options (>= 8.0.0)
+C:\Users\YASKHAND\Documents\leaveapp\leaveapp\leaveapp.csproj : error NU1107:  leaveapp -> AutoMapper.Extensions.Microsoft.Depende 
+ncyInjection 8.0.0 -> Microsoft.Extensions.Options (>= 3.0.0 && < 4.0.0).
+    4 Warning(s)
+    1 Error(s)
