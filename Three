@@ -1,0 +1,52 @@
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using System.Reflection;
+
+public class ApplicationDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, string>
+{
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+        : base(options)
+    {
+    }
+
+    // DbSets
+    public DbSet<LeaveType> LeaveTypes { get; set; }
+    public DbSet<LeaveRequest> LeaveRequests { get; set; }
+    public DbSet<LeaveBalance> LeaveBalances { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder builder)
+    {
+        base.OnModelCreating(builder);
+
+        // Relationship: LeaveRequest -> Employee
+        builder.Entity<LeaveRequest>()
+            .HasOne(lr => lr.Employee)
+            .WithMany(u => u.LeaveRequests)
+            .HasForeignKey(lr => lr.EmployeeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Relationship: LeaveRequest -> Manager
+        builder.Entity<LeaveRequest>()
+            .HasOne(lr => lr.Manager)
+            .WithMany(u => u.ApprovedLeaveRequests)
+            .HasForeignKey(lr => lr.ManagerId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Composite Unique Constraint for LeaveBalance
+        builder.Entity<LeaveBalance>()
+            .HasIndex(lb => new { lb.UserId, lb.LeaveTypeId })
+            .IsUnique();
+
+        // Seed Leave Types
+        builder.Entity<LeaveType>().HasData(
+            new LeaveType { Id = 1, Name = "Sick Leave", DefaultDays = 10 },
+            new LeaveType { Id = 2, Name = "Casual Leave", DefaultDays = 8 },
+            new LeaveType { Id = 3, Name = "Paid Leave", DefaultDays = 15 },
+            new LeaveType { Id = 4, Name = "Unpaid Leave", DefaultDays = 0 }
+        );
+
+        // Enum to int mapping (optional, handled by EF Core by default)
+        builder.Entity<LeaveRequest>()
+            .Property(lr => lr.Status)
+            .HasConversion<int>();
+    }
