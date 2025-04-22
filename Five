@@ -1,0 +1,377 @@
+To implement JWT Authentication and Role-based Authorization (RBAC) with ASP.NET Core 8, I'll guide you step by step through the required changes in your Program.cs, Authentication Service, Controller for login and registration, and necessary Role-based Authorization.
+
+
+---
+
+Steps for JWT Authentication with RBAC
+
+1. Install Required Packages
+
+
+2. Update Program.cs for JWT Authentication
+
+
+3. Create Authentication Service (to handle login and registration)
+
+
+4. Create Role Management
+
+
+5. Create Controller to Handle Login and Registration
+
+
+6. Authorize Routes with Roles
+
+
+
+
+---
+
+1. Install Required Packages
+
+Run these commands to install the necessary packages for JWT authentication:
+
+dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer --version 8.0.0
+dotnet add package Microsoft.IdentityModel.Tokens --version 8.0.0
+dotnet add package System.IdentityModel.Tokens.Jwt --version 8.0.0
+
+
+---
+
+2. Update Program.cs for JWT Authentication
+
+In your Program.cs, you'll need to configure JWT authentication and specify the role-based authorization middleware:
+
+Updated Program.cs
+
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using LeaveApp.Data;
+using LeaveApp.Models;
+using LeaveApp.Profiles;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// --------------------------------------------
+// 1. Add Services
+// --------------------------------------------
+
+// DB Context
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Identity Configuration
+builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
+{
+    options.Password.RequireNonAlphanumeric = false;
+})
+.AddEntityFrameworkStores<ApplicationDbContext>()
+.AddDefaultTokenProviders();
+
+// JWT Authentication
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = true;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+    };
+});
+
+// AutoMapper
+builder.Services.AddAutoMapper(typeof(MappingProfile));
+
+// Controllers
+builder.Services.AddControllers();
+
+// Swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "LeaveApp API", Version = "v1" });
+    c.EnableAnnotations();
+});
+
+// CORS (optional)
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
+// --------------------------------------------
+// 2. Build & Configure Middleware
+// --------------------------------------------
+var app = builder.Build();
+
+// Apply migrations (optional in dev)
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate();
+}
+
+// Middleware
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseCors("AllowAll");
+
+app.UseAuthentication();  // Enable authentication middleware
+app.UseAuthorization();   // Enable authorization middleware
+
+app.MapControllers();
+
+app.Run();
+
+Key Points:
+
+Jwt:Issuer, Jwt:Audience, and Jwt:Key will be in your appsettings.json file. We'll set them up in the next step.
+
+The JWT Bearer authentication scheme is set up for middleware.
+
+CORS is configured for your app to accept any origin (useful during development).
+
+
+
+---
+
+3. Add JWT Configuration in appsettings.json
+
+Make sure to add your JWT configuration to the appsettings.json file:
+
+Updated appsettings.json
+
+{
+  "Jwt": {
+    "Key": "YourSecretKeyHere1234567890",  // Change this to your secret key
+    "Issuer": "LeaveAppIssuer",
+    "Audience": "LeaveAppAudience"
+  },
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=localhost;Port=5432;Database=leaveapp_db;Username=yourusername;Password=yourpassword"
+  }
+}
+
+> Important: Change the Key to a strong secret key and don't hardcode it for production. You can use environment variables or a key vault in production environments.
+
+
+
+
+---
+
+4. Create Authentication Service (Handles Login and Registration)
+
+The service will handle JWT Token Generation and Registration of users.
+
+AuthenticationService.cs
+
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using System.Threading.Tasks;
+using LeaveApp.Models;
+
+public interface IAuthenticationService
+{
+    Task<string> RegisterAsync(string username, string password, string role);
+    Task<string> LoginAsync(string username, string password);
+}
+
+public class AuthenticationService : IAuthenticationService
+{
+    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly SignInManager<ApplicationUser> _signInManager;
+    private readonly IConfiguration _configuration;
+
+    public AuthenticationService(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IConfiguration configuration)
+    {
+        _userManager = userManager;
+        _signInManager = signInManager;
+        _configuration = configuration;
+    }
+
+    public async Task<string> RegisterAsync(string username, string password, string role)
+    {
+        var user = new ApplicationUser { UserName = username };
+        var result = await _userManager.CreateAsync(user, password);
+
+        if (!result.Succeeded)
+        {
+            throw new Exception("User registration failed.");
+        }
+
+        if (!await _userManager.IsInRoleAsync(user, role))
+        {
+            await _userManager.AddToRoleAsync(user, role);
+        }
+
+        return GenerateJwtToken(user);
+    }
+
+    public async Task<string> LoginAsync(string username, string password)
+    {
+        var user = await _userManager.FindByNameAsync(username);
+        if (user == null) throw new Exception("Invalid credentials.");
+
+        var result = await _signInManager.PasswordSignInAsync(user, password, false, false);
+        if (!result.Succeeded) throw new Exception("Invalid credentials.");
+
+        return GenerateJwtToken(user);
+    }
+
+    private string GenerateJwtToken(ApplicationUser user)
+    {
+        var claims = new[]
+        {
+            new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim(ClaimTypes.NameIdentifier, user.Id),
+            new Claim(ClaimTypes.Role, "Employee") // You can set role dynamically based on your logic
+        };
+
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var token = new JwtSecurityToken(
+            issuer: _configuration["Jwt:Issuer"],
+            audience: _configuration["Jwt:Audience"],
+            claims: claims,
+            expires: DateTime.Now.AddDays(1),
+            signingCredentials: creds
+        );
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+}
+
+> The GenerateJwtToken method creates a JWT based on user information and roles.
+
+
+
+
+---
+
+5. Create Role Management and Add Initial Roles
+
+Add roles like Employee, Manager, and Admin on application startup.
+
+SeedRoles.cs
+
+using Microsoft.AspNetCore.Identity;
+
+public static class SeedRoles
+{
+    public static async Task SeedRoleAsync(RoleManager<ApplicationRole> roleManager)
+    {
+        var roles = new[] { "Employee", "Manager", "Admin" };
+
+        foreach (var role in roles)
+        {
+            var roleExist = await roleManager.RoleExistsAsync(role);
+            if (!roleExist)
+            {
+                await roleManager.CreateAsync(new ApplicationRole(role));
+            }
+        }
+    }
+}
+
+Call the SeedRoles method in Program.cs to ensure roles are created:
+
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
+    await SeedRoles.SeedRoleAsync(roleManager);
+}
+
+
+---
+
+6. Create Controller for Login and Registration
+
+Create an AuthController to handle Login and Registration requests.
+
+AuthController.cs
+
+using Microsoft.AspNetCore.Mvc;
+using LeaveApp.Models;
+using LeaveApp.Services;
+
+[Route("api/[controller]")]
+[ApiController]
+public class AuthController : ControllerBase
+{
+    private readonly IAuthenticationService _authenticationService;
+
+    public AuthController(IAuthenticationService authenticationService)
+    {
+        _authenticationService = authenticationService;
+    }
+
+    [HttpPost("register")]
+    public async Task<IActionResult> Register([FromBody] RegisterDto model)
+    {
+        var token = await _authenticationService.RegisterAsync(model.Username, model.Password, model.Role);
+        return Ok(new { Token = token });
+    }
+
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] LoginDto model)
+    {
+        var token = await _authenticationService.LoginAsync(model.Username, model.Password);
+        return Ok(new { Token = token });
+    }
+}
+
+RegisterDto & LoginDto
+
+public class RegisterDto
+{
+    public string Username { get; set; }
+    public string Password { get; set; }
+    public string Role { get; set; }  // "Employee", "Manager", "Admin"
+}
+
+public class LoginDto
+{
+    public string Username { get; set; }
+    public string Password { get; set; }
+}
+
+
+---
+
+7. Authorize Routes with Roles
+
+You can now authorize specific actions based on roles using the [Authorize] attribute:
+
+[Authorize(Roles = "Manager")]
+[HttpPost("approve-leave")]
+public IActionResult Appro
